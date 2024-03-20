@@ -11,6 +11,9 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Limelight;
 
+Command[] paths = {autobuilder.followPath("Middle left"), autobuilder.followPath("Middle midleft"), autobuilder.followPath("Middle mid"), autobuilder.followPath("Middle midright"), autobuilder.followPath("Middle right")};
+String[] skipPaths = {"Midleft to mid", "Mid to midright", "midright to right"};
+
 public class AdaptivePath extends Command {
   /** Creates a new AdaptivePath. */
   public AdaptivePath() {
@@ -29,22 +32,14 @@ public class AdaptivePath extends Command {
   public void execute() {
     autobuilder.followPath("Middle left");
 
-    if (Limelight.TargetData.hastargets()) {
-      autobuilder.followPath("Middle midleft");
+    for (int i = 0; i <= 4; i = i + 1) {
+      if (Limelight.TargetData.hastargets()) {
+        paths[i];
+      }
+      else {
+        autobuilder.followPath(skipPaths[i]).schedule();
+      }
     }
-    else {
-      autobuilder.followPath("Midleft to mid");
-    }
-
-    if (Limelight.TargetData.hastargets()) {
-      autobuilder.followPath("Middle mid");
-    }
-    else {
-      autobuilder.followPath("Mid to midright");
-    }
-
-    
-  }
 
   // Called once the command ends or is interrupted.
   @Override
