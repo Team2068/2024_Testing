@@ -8,17 +8,22 @@ package frc.robot.commands;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.path.PathPlannerPath;
+
+import frc.robot.utility.IO;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Limelight;
 
-Command[] paths = {autobuilder.followPath("Middle left"), autobuilder.followPath("Middle midleft"), autobuilder.followPath("Middle mid"), autobuilder.followPath("Middle midright"), autobuilder.followPath("Middle right")};
-String[] skipPaths = {"Midleft to mid", "Mid to midright", "midright to right"};
 
 public class AdaptivePath extends Command {
   /** Creates a new AdaptivePath. */
+  Command[] paths = {AutoBuilder.followPath(PathPlannerPath.fromPathFile("Middle left")), AutoBuilder.followPath(PathPlannerPath.fromPathFile("Middle midleft")), AutoBuilder.followPath(PathPlannerPath.fromPathFile("Middle mid")), AutoBuilder.followPath(PathPlannerPath.fromPathFile("Middle midright")), AutoBuilder.followPath(PathPlannerPath.fromPathFile("Middle right"))};
+  Command[] skipPaths = {AutoBuilder.followPath(PathPlannerPath.fromPathFile("Midleft to mid")), AutoBuilder.followPath(PathPlannerPath.fromPathFile("Mid to midright")), AutoBuilder.followPath(PathPlannerPath.fromPathFile("midright to right"))};
+  IO io;
+
   public AdaptivePath() {
     // Use addRequirements() here to declare subsystem dependencies.
-
   }
 
   // Called when the command is initially scheduled.
@@ -30,16 +35,17 @@ public class AdaptivePath extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    autobuilder.followPath("Middle left");
+    paths[0].schedule();
 
-    for (int i = 0; i <= 4; i = i + 1) {
-      if (Limelight.TargetData.hastargets()) {
-        paths[i];
+    for (int i = 1; i <= paths.length; i = i + 1) {
+      if (io.limelight.targetData.hasTargets) {
+        paths[i].schedule();
       }
       else {
-        autobuilder.followPath(skipPaths[i]).schedule();
+        skipPaths[i-1].schedule();
       }
     }
+  }
 
   // Called once the command ends or is interrupted.
   @Override

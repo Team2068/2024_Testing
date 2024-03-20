@@ -41,7 +41,7 @@ public class Limelight extends SubsystemBase {
     public double verticalSideLength = 0;
   }
 
-  private TargetData targetData = new TargetData();
+  public TargetData targetData = new TargetData();
 
   public NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
   StructPublisher<Pose2d> posePublisher = NetworkTableInstance.getDefault().getTable("Simulating").getStructTopic("EstimatedPose", Pose2d.struct).publish();
