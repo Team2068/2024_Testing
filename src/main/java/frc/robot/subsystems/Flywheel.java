@@ -60,6 +60,17 @@ public class Flywheel extends SubsystemBase {
     return Math.toDegrees(Math.atan(height / distance));
   }
 
+  public double distanceShoot(double x) {
+    double xone = 0;
+    //TODO: PUT REAL VALUES
+    double xtwo = 20;
+    double yone = 60;
+    double ytwo = 180;
+    
+    return yone + (((x - xone) * (ytwo - yone))/(xtwo - xone));
+  }
+
+
   // public static double RPM(double angle, double distance) {
   //   double radius = Units.inchesToMeters(1.5);
   //   double conversion_factor = 60 / (2 * Math.PI * radius);
