@@ -121,7 +121,8 @@ public class KrakenSwerveModule {
         }
 
         driveMotor.setVoltage(driveVolts);
-        steerMotor.getPIDController().setReference(targetAngle, ControlType.kPosition);
+        //steerMotor.getPIDController().setReference(targetAngle, ControlType.kPosition );
+        steerMotor.getPIDController().setReference(targetAngle, ControlType.kPosition, 0, 0);
     }
 
 }

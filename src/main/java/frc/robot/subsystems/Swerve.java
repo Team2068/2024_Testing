@@ -5,6 +5,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
+
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -59,6 +61,25 @@ public class Swerve extends SubsystemBase {
 
     private boolean active = true;
 
+    public boolean correctionEnabled = true;
+    private double lastHeading = 0;
+    private PIDController headingController = new PIDController((double) DebugTable.get("Heading kP", 0.01), 0, (double) DebugTable.get("Heading kD", 0.0));
+    private double HEADING_CORRECTION_DEADBAND = 0.01;
+
+    public void headingCorrection() {
+        if (Math.abs(chassisSpeeds.omegaRadiansPerSecond) < HEADING_CORRECTION_DEADBAND
+                && (Math.abs(chassisSpeeds.vxMetersPerSecond) > HEADING_CORRECTION_DEADBAND
+                        || Math.abs(chassisSpeeds.vyMetersPerSecond) > HEADING_CORRECTION_DEADBAND)) {
+            if (!correctionEnabled) {
+                lastHeading = absoluteRotation();
+                correctionEnabled = true;
+            }
+            chassisSpeeds.omegaRadiansPerSecond = headingController.calculate(lastHeading, absoluteRotation());
+        } else {
+            correctionEnabled = false;
+        }
+    }
+
     public Swerve() {
         ShuffleboardTab tab = Shuffleboard.getTab("Drivetrain");
         for (int i = 0; i < modules.length; i++) {
@@ -88,7 +109,8 @@ public class Swerve extends SubsystemBase {
                 },
                 this);
 
-        odometry = new SwerveDriveOdometry(kinematics, rotation(), modulePositions(), new Pose2d(0, 0, new Rotation2d()));
+        odometry = new SwerveDriveOdometry(kinematics, rotation(), modulePositions(),
+                new Pose2d(0, 0, new Rotation2d()));
 
     }
 
@@ -101,7 +123,9 @@ public class Swerve extends SubsystemBase {
     }
 
     public double absoluteRotation() {
-        return Math.toRadians(pigeon2.getYaw().getValueAsDouble() % 360);
+        double rotation = pigeon2.getYaw().getValueAsDouble() % 360;
+        rotation += (rotation < 0) ? 360 : 0;
+        return Math.toRadians( rotation);
     }
 
     public void drive(ChassisSpeeds chassisSpeeds) {
@@ -184,7 +208,7 @@ public class Swerve extends SubsystemBase {
     }
 
     public void setModuleStates(SwerveModuleState[] states) {
-        for (int i = 0; i < modules.length; i++){
+        for (int i = 0; i < modules.length; i++) {
             modules[i].set((states[i].speedMetersPerSecond / MAX_VELOCITY) * MAX_VOLTAGE, states[i].angle.getRadians());
         }
     }
@@ -205,6 +229,8 @@ public class Swerve extends SubsystemBase {
     }
 
     public void periodic() {
+        if ((boolean) DebugTable.get("Heading Correction Enabled", true)) headingCorrection();
+
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(chassisSpeeds);
         if (active)
             setModuleStates(states);
